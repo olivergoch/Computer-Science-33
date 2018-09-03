@@ -1,0 +1,155 @@
+-scp Desktop/sthttpd-2.27.0.tar.gz oliver@lnxsrv07.seas.ucla.edu:Desktop 
+uploaded the file with scp to the linux server
+-tar -xvzf sthttpd-2.27.0.tar.gz 
+untarred the file
+-export PATH=/usr/local/cs/bin:$PATH 
+this made the program on the right path
+-which gcc 
+made sure it was on the right path
+-cd file 
+navigated to the thttpd file in the src directory
+-vi thttpd.c 
+patched the file
+-./configure LDFLAGS="-Xlinker --rpath=/usr/local/cs/gcc-$(gcc -dumpversion)/lib"
+configured the flags
+-make clean
+make CFLAGS='-g3 -O2 -fno-inline -fstack-protector-strong' 
+made files
+-mv src/thttpd src/thttpd-sp 
+changed the file name
+-make clean
+make CFLAGS='-g3 -O2 -fno-inline -fsanitize=address' 
+made files
+-mv src/thttpd src/thttpd-as 
+changed the file name
+-make clean
+make CFLAGS='-g3 -O2 -fno-inline -fno-stack-protector -zexecstack' 
+made files
+-mv src/thttpd src/thttpd-no 
+changed the file name
+-gdb thttpd-sp
+went into gdb debugger
+-run -p 12952 -D 
+ran server normally
+-crtl C 
+exited run of server
+-run -p 12952 -D -C foo.txt 
+crashed thttpd-sp with file that had over 100 character word
+-backtrace 
+looked at stack
+-disas 
+looked at disassembly
+-break 1088
+set a breakpoint because it crashed at 1090
+-stepi 
+stepped through the program
+-found the cause of the crash
+0x0000000000404f23 <+1219>:	mov    0x68(%rsp),%rax
+   0x0000000000404f28 <+1224>:	xor    %fs:0x28,%rax
+=> 0x0000000000404f31 <+1233>:	jne    0x405051 <read_config+1521>
+ 0x0000000000405051 <+1521>:	callq  0x4024b0 <__stack_chk_fail@plt>
+ 
+The machine checked a certain value from the stack against another value, most
+ likely a canary value. This comparison yielded false and the system called the
+  stack check fail function, causing the system to crash.
+
+-run -p 12953 -D
+ran server normally
+-run -p 12953 -D -C foo.txt
+crashed the thttpd-as with file that had over 100 character word
+-backtrace
+program had no stack to backtrace
+-break 1017
+put a breakpoint at that line because it crashed at 1018
+-found cause of the crash
+0x00000000004e0b43 <read_config+179>:	48 8b 3c 24	mov    (%rsp),%rdi
+   0x00000000004e0b47 <read_config+183>:	be 23 00 00 00	mov    $0x23,%esi
+=> 0x00000000004e0b4c <read_config+188>:	
+    e8 2f a5 f5 ff	callq  0x43b080 <__interceptor_strchr(char const*, int)>
+   0x00000000004e0b51 <read_config+193>:	48 85 c0	test   %rax,%rax
+   0x00000000004e0b54 <read_config+196>:	74 24	je     0x4e0b7a <read_config+234>
+   
+The machine called the interceptor_strchr function but the machine crashed
+ because of the faulty address that was created with a word in the text
+  file that was too long for it to handle.
+
+-run -p 12954 -D
+ran the server normally
+-run -p 12954 -D -C foo.txt
+crashed the server with file
+-backtrace
+backtraced through the stack
+-break 1188
+set a breakpoint
+-found the cause of the crash
+0x0000000000404d93 <read_config+1203>:	48 83 c4 70	add    $0x70,%rsp
+   0x0000000000404d97 <read_config+1207>:	5b	pop    %rbx
+   0x0000000000404d98 <read_config+1208>:	5d	pop    %rbp
+   0x0000000000404d99 <read_config+1209>:	41 5c	pop    %r12
+   0x0000000000404d9b <read_config+1211>:	41 5d	pop    %r13
+   0x0000000000404d9d <read_config+1213>:	41 5e	pop    %r14
+=> 0x0000000000404d9f <read_config+1215>:	c3	retq 
+
+The machine got to the return command but could not return because of a
+ segmentation fault. This makes sense because there is no stack protection
+  or address sanitization.
+
+
+-make CFLAGS='-S -O2 -fno-inline -fstack-protector-strong'
+made assembly file for SP
+-make CFLAGS='-S -O2 -fno-inline -fsanitize=address'
+made assembly file for AS
+-make CFLAGS='-S -O2 -fno-inline -fno-stack-protector -zexecstack'
+made assembly file for NO
+
+The differences in the assembly code of the files was how it handled the stack
+ in the handle_read function. -fstack-protector-strong does a check at the end
+  of the function to ensure that the stack hasn’t been harmed during the
+   function call. -fsanitize=address checks the stack after every
+    operation by using cmp commands. 
+
+								The Exploit
+-gdb thttpd-no
+run gdb on thttpd-no
+-break 999 
+put a breakpoint at the start of read_config
+-run -p 12954 -D -C foo.txt
+run it with the corrupting file
+-stepi/nexti
+continue through program until we reach fgets while loop
+-p &line
+this gives us the address of the base of the buffer, which is 0x7fffffffcea0
+-stepi/nexti
+continue until end of read_config
+the stack pointer is 0x7fffffffcf38
+difference between values is 152 bytes
+so we must place the instructions after value
+basic idea of exploit is to have the 152 characters, a move instruction on an
+ address, and then the malicious code
+The mov instruction we call is on the end of the buffer, or the stack value
+ when the function returned, which is 0x7fffffffcf38
+This being a little endian machine, our hex instruction looks like
+	48 bf 38 cf ff ff ff f7 00 00
+	The 48 bf being the mov command and the extra zeros necessary to get the 
+	address to 8 bytes
+target.txt\0, the \0 is because of the null byte, is converted to hex
+74 61 72 67 65 74 2e 74 78 74 5c 30
+Next we take the instructions to actually implement this exploit.
+-run -p 12954 -D
+ran the server normally
+-Crtl+c
+quit the execution of the server
+-disas /r unlink
+this gives us the instructions for the unlink command, but we only care about
+ the first two commands, which is
+0x00007ffff76c7330 <+0>:	b8 57 00 00 00	mov    $0x57,%eax
+0x00007ffff76c7335 <+5>:	0f 05	syscall
+the syscall is what we are looking for
+So we take all of this and convert to binary so that the machine can execute it
+We then put this after our 152 characters of garbage, the first 5 character
+ being port=
+
+
+
+
+

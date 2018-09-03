@@ -1,0 +1,9 @@
+1. The problem is how the values are stored in Emacs, namely the two bit tags that Emacs uses. This takes information away from the values. The lea instruction at 547920 moves the  value, but the way it’s implemented, with the tags, important information is lost. This is what causes the problem in the function.
+
+2. That is the lowest the number that a Lisp number can represent. It can be seen that in the Emacs source code
+
+3. When the multiplication process happens, Emacs uses two bits to tag the values. When this process happens bits are shifted both left and right to account for this. So when this happens information is lost and eventually the resulting value is 1.
+
+4. The original issue originated from the mishandling of overflow. Using the -fwrapv flag does not change this problem and in fact makes the overflow checks written into the code irrelevant.
+
+5. The bug accidentally allocates too much memory on the stack rendering memory that should not be accessed. This creates a host of problems and leaves the system vulnerable.

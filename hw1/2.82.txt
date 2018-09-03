@@ -1,0 +1,14 @@
+A. The expression will not always yield 1. One case that provides a result other than 1 is if one argument, either x and y, is INT_MIN, then flipping the sign of INT_MIN causes it to overflow back to INT_MIN. That will cause any comparison to return 0.
+
+B. The expression will always yield 1. By treating the left shift of 4 as multiplication of 16 and rearranging the variables on the left side, it will equal the right hand side. x*16 + y*16 + y - x = 17*y + 15*x
+
+C. The expression will always yield 1. It is simply a matter of rearranging the left side. First, ~x = -x-1. -x-1 -y-1 + 1 = -1 -(x+y) = ~(x+y)
+
+D. The expression will always yield 1. The right hand side is a more complicated way of obtaining the left hand side. Both sides end up as unsigned subtractions.
+
+E. The expression will always yield 1. The left hand side will always be less than or equal to the right, and will never be greater than. The left hand side is effectively divided by 4 and then multiplied by 4 but, due to sign smearing, some factors are lost in the process. 
+
+F. The expression will always yield 1. The left hand side of the equation is normal, arithmetic, signed bit shifting. It will produce a number with a sign consistent with the original int. The left side, however, is bit shifting with a unsigned int. But the & operation with the unsigned int and -1 left shifted by 31 will produce a signed integer. Adding that to the unsigned int right shifted by 1 will evaluate to the same int as the left hand side.
+
+
+G. The expression will always yield 1. (x & 127) acts as a modulus of sorts by removing the more significant bits and leaving the least significant bits behind. All bits that are remaining stay the same.

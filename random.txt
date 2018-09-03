@@ -1,0 +1,11 @@
+A. It will always produce 1. x will always be within the range of a float and a double and no information will be lost.
+
+B. It will not produce 1. x = 0, y = -1
+
+C. It will produce 1. Normally, floating point addition is not associative, however when casted ints are used instead of floating point values, then there is no loss of precision or mismatch of powers. All addition is the same.
+
+D. It will not always produce 1. x = INT_MAX, y = 10, z = INT_MAX
+
+E. It will not always produce 1. x = 0 , z = 0
+
+Problems B, C, and D all require this flag. It is needed because the operations can overflow or underflow, and the -fwrapv flag is necessary to avoid a crash or undefined behavior.

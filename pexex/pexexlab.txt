@@ -1,0 +1,21 @@
+-cmd
+notes
+
+-gdb ~eggert/bin64/bin/emacs-25.2
+open gdb
+-set disassemble on
+sets gdb to produced assembly code
+-break Ftimes
+Breakpoint 1 at 0x547ad0: file data.c, line 2815.
+-run -Q -batch -eval '(print (* 1250284240 -1844255039))'
+produced first instruction, <Ftimes+0>, with instruction location and registers
+-stepi
+produced the machine instructions
+-disas
+produced all instructions of the function
+-continue
+ended the function call
+-run -Q -batch -eval '(print (* 1250284240 -1844255039))'
+ran the function again
+-info registers
+produced the information for all the registers

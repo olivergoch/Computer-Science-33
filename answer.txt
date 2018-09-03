@@ -1,0 +1,9 @@
+12.18
+A. Unsafe. Thread 2 loads and updates the loop but does not store it before Thread 1 loads and updates it.
+
+B. Safe. Thread 1 stores the loop before Thread 2 loads it making it a safe trajectory.
+
+C. Unsafe. Thread 1 loads the loop then Thread 2 loads, updates, and stores the loop.
+
+12.24
+Due to the nature of reentrancy, the function is technically implicitly reentrant. This means that it is reentrant with most uses, however there is a chance that it will write to the same buffer, due that will be due to the user, rather than the nature of the function.

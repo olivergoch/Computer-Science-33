@@ -1,0 +1,5 @@
+1.This function is simple with only main machine instruction, an exclusive or.
+
+2.This function is more complicated than the last one, with several instructions. It also takes care to check for overflow due to the fwrapv flag.
+
+3.This function is the most complicated of the three. The -fsanitize flag runs many checks on the function and creates many tests to ensure the function does nothing illegal or out of bounds.

@@ -1,0 +1,3 @@
+A.size_t is an unsigned type while maxbytes is a signed type. If an unsigned type is subtracted from a signed type, then the result is of the unsigned type which is always greater than 0.
+
+B.if(maxbytes >= sizeof(val))

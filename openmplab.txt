@@ -1,0 +1,20 @@
+-scp openmplab.tgz oliver@lnxsrv07.seas.ucla.edu:Desktop
+Uploaded the files to the linux server
+-tar -zxvf openmplab.tgz
+untarred the file
+-make seq
+compiled the files normally
+-./seq
+ran the normally compiled file
+-make seq GPROF=1
+made the file with GRPROF=1
+-./seq
+ran file normally, this produced gmon.out
+-gprof seq | less
+ran gprof to analyze file, func1 takes the most time
+-vi func.c
+inspected the functions, saw that there was the ability parallelize certain loops
+used #pragma omp parrallel for on many of the for loops in func0, func1, and func2
+however we cannot use that on all of these loops
+some must have variables that must be locked with private (variable)
+or for the accumulators, they must be protected with reduction(operation:variable)

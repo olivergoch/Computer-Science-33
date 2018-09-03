@@ -1,0 +1,38 @@
+3.67
+A.
+High Address										Low Address
+%rsp + 10    ...  %rsp + 24  %rsp + 16   %rsp + 8    %rsp 
+%rbp         ...  | z         | &z       | y        | x |
+
+B.
+eval passes the struct strA s into process. It does this by advancing the stack pointer by 64 and moving it %rdi.
+
+C.
+It takes the %rdi that was passed in by advancing the stack pointer by 64 to get to one of the values of s. Then the machine advances the pointer by 8, 16, and 24 to retrieve the values of s and store them in r.
+
+D.
+The machine takes the register that was passed in, %rdi, and retrieves the values of s. It takes those values and places them in the correct registers.
+
+E.
+High Address										Low Address
+%rsp + 104	...   %rip + 80  %rip + 72     %rip +60       
+%rbp        ...  | r.q = z   | r.u[1] = x  | r.u[1] = y   
+(Cont.)
+...   %rsp + 24  %rsp + 16  %rsp + 8  %rsp 
+...   | z        | &z       | y      | x |
+
+F.
+Structures are stored like regular values in the stack, except that they are stored next to each other for quicker access. This allows the machine to retrieve the values without searching all of memory for them. They are also generally returned as normal variables.
+
+3.70
+A.
+e1.p    = 0 byte offset
+e1.y    = 8 byte offset
+e2.x    = 0 byte offset
+e2.next = 8 byte offset
+
+B.
+16 Bytes
+
+C.
+up->e2.x = *(e2.next->e1.p) - up->e2.next->e1.y;
